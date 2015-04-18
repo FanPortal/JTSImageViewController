@@ -93,6 +93,7 @@ typedef struct {
 @property (strong, nonatomic) UIProgressView *progressView;
 @property (strong, nonatomic) UIActivityIndicatorView *spinner;
 @property (strong, nonatomic) UIButton *closeButton;
+@property (strong, nonatomic) UIImageView *navBarShadowImageView;
 
 // Gesture Recognizers
 @property (strong, nonatomic) UITapGestureRecognizer *singleTapperPhoto;
@@ -168,6 +169,7 @@ typedef struct {
     
     [UIView animateWithDuration:JTSImageViewController_TransitionOutAnimationDuration animations:^{
         _closeButton.alpha = 0.0f;
+        _navBarShadowImageView.alpha = 0.0f;
     }];
     
     _flags.isPresented = NO;
@@ -287,6 +289,9 @@ typedef struct {
         [self viewDidLoadForAltTextMode];
     }
     
+    _navBarShadowImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"bg_collectible_nav_topOverlay"]];
+    [self.view addSubview:_navBarShadowImageView];
+    
     _closeButton = [[UIButton alloc] initWithFrame:CGRectMake(10.0, 20.0, 40.0, 40.0)];
     [_closeButton setTitle:nil forState:UIControlStateNormal];
     [_closeButton addTarget:self action:@selector(actionClose) forControlEvents: UIControlEventTouchUpInside];
@@ -297,6 +302,7 @@ typedef struct {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(JTSImageViewController_TransitionInAnimationDuration * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [UIView animateWithDuration:JTSImageViewController_TransitionInAnimationDuration animations:^{
             _closeButton.alpha = 1.0f;
+            _navBarShadowImageView.alpha = 1.0f;
         }];
     });
 }
