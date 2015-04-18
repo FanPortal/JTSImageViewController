@@ -17,14 +17,15 @@
 ///--------------------------------------------------------------------------------------------------------------------
 
 // Public Constants
-CGFloat const JTSImageViewController_DefaultAlphaForBackgroundDimmingOverlay = 0.66f;
+CGFloat const JTSImageViewController_DefaultAlphaForBackgroundDimmingOverlay = 1.0f;
 CGFloat const JTSImageViewController_DefaultBackgroundBlurRadius = 2.0f;
 
 // Private Constants
 static CGFloat const JTSImageViewController_MinimumBackgroundScaling = 0.94f;
 static CGFloat const JTSImageViewController_TargetZoomForDoubleTap = 3.0f;
 static CGFloat const JTSImageViewController_MaxScalingForExpandingOffscreenStyleTransition = 1.25f;
-static CGFloat const JTSImageViewController_TransitionAnimationDuration = 0.3f;
+static CGFloat const JTSImageViewController_TransitionInAnimationDuration = 0.3f;
+static CGFloat const JTSImageViewController_TransitionOutAnimationDuration = 0.2f;
 static CGFloat const JTSImageViewController_MinimumFlickDismissalVelocity = 800.0f;
 
 typedef struct {
@@ -91,6 +92,7 @@ typedef struct {
 @property (strong, nonatomic) UITextView *textView;
 @property (strong, nonatomic) UIProgressView *progressView;
 @property (strong, nonatomic) UIActivityIndicatorView *spinner;
+@property (strong, nonatomic) UIButton *closeButton;
 
 // Gesture Recognizers
 @property (strong, nonatomic) UITapGestureRecognizer *singleTapperPhoto;
@@ -163,6 +165,10 @@ typedef struct {
     if (_flags.isPresented == NO) {
         return;
     }
+    
+    [UIView animateWithDuration:JTSImageViewController_TransitionOutAnimationDuration animations:^{
+        _closeButton.alpha = 0.0f;
+    }];
     
     _flags.isPresented = NO;
     
@@ -280,6 +286,19 @@ typedef struct {
     else if (self.mode == JTSImageViewControllerMode_AltText) {
         [self viewDidLoadForAltTextMode];
     }
+    
+    _closeButton = [[UIButton alloc] initWithFrame:CGRectMake(10.0, 20.0, 40.0, 40.0)];
+    [_closeButton setTitle:nil forState:UIControlStateNormal];
+    [_closeButton addTarget:self action:@selector(actionClose) forControlEvents: UIControlEventTouchUpInside];
+    [_closeButton setImage:[UIImage imageNamed:@"ic_nav_close"] forState: UIControlStateNormal];
+    _closeButton.alpha = 0.0f;
+    [self.view addSubview:_closeButton];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(JTSImageViewController_TransitionInAnimationDuration * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [UIView animateWithDuration:JTSImageViewController_TransitionInAnimationDuration animations:^{
+            _closeButton.alpha = 1.0f;
+        }];
+    });
 }
 
 - (void)viewDidLayoutSubviews {
@@ -533,23 +552,29 @@ typedef struct {
     self.doubleTapperPhoto.numberOfTapsRequired = 2;
     self.doubleTapperPhoto.delegate = self;
     
-    self.longPresserPhoto = [[UILongPressGestureRecognizer alloc] init];
-    [self.longPresserPhoto addTarget:self action:@selector(imageLongPressed:)];
-    self.longPresserPhoto.delegate = self;
+    //
+    // AZ: No need for FanPortal
+    //
+//    self.longPresserPhoto = [[UILongPressGestureRecognizer alloc] init];
+//    [self.longPresserPhoto addTarget:self action:@selector(imageLongPressed:)];
+//    self.longPresserPhoto.delegate = self;
     
     self.singleTapperPhoto = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(imageSingleTapped:)];
     [self.singleTapperPhoto requireGestureRecognizerToFail:self.doubleTapperPhoto];
-    [self.singleTapperPhoto requireGestureRecognizerToFail:self.longPresserPhoto];
+    //[self.singleTapperPhoto requireGestureRecognizerToFail:self.longPresserPhoto];
     self.singleTapperPhoto.delegate = self;
     
     [self.view addGestureRecognizer:self.singleTapperPhoto];
     [self.view addGestureRecognizer:self.doubleTapperPhoto];
-    [self.view addGestureRecognizer:self.longPresserPhoto];
-    
-    self.panRecognizer = [[UIPanGestureRecognizer alloc] init];
-    [self.panRecognizer addTarget:self action:@selector(dismissingPanGestureRecognizerPanned:)];
-    self.panRecognizer.delegate = self;
-    [self.scrollView addGestureRecognizer:self.panRecognizer];
+    //[self.view addGestureRecognizer:self.longPresserPhoto];
+
+    //
+    // AZ: No need for FanPortal
+    //
+//    self.panRecognizer = [[UIPanGestureRecognizer alloc] init];
+//    [self.panRecognizer addTarget:self action:@selector(dismissingPanGestureRecognizerPanned:)];
+//    self.panRecognizer.delegate = self;
+//    [self.scrollView addGestureRecognizer:self.panRecognizer];
 }
 
 - (void)setupTextViewTapGestureRecognizer {
@@ -625,7 +650,7 @@ typedef struct {
             }
         }
         
-        CGFloat duration = JTSImageViewController_TransitionAnimationDuration;
+        CGFloat duration = JTSImageViewController_TransitionInAnimationDuration;
         if (USE_DEBUG_SLOW_ANIMATIONS == 1) {
             duration *= 4;
         }
@@ -770,7 +795,7 @@ typedef struct {
         CGFloat scaling = JTSImageViewController_MaxScalingForExpandingOffscreenStyleTransition;
         self.scrollView.transform = CGAffineTransformMakeScale(scaling, scaling);
         
-        CGFloat duration = JTSImageViewController_TransitionAnimationDuration;
+        CGFloat duration = JTSImageViewController_TransitionInAnimationDuration;
         if (USE_DEBUG_SLOW_ANIMATIONS == 1) {
             duration *= 4;
         }
@@ -880,7 +905,7 @@ typedef struct {
         CGFloat scaling = JTSImageViewController_MaxScalingForExpandingOffscreenStyleTransition;
         textViewSnapshot.transform = CGAffineTransformMakeScale(scaling, scaling);
         
-        CGFloat duration = JTSImageViewController_TransitionAnimationDuration;
+        CGFloat duration = JTSImageViewController_TransitionInAnimationDuration;
         if (USE_DEBUG_SLOW_ANIMATIONS == 1) {
             duration *= 4;
         }
@@ -1026,7 +1051,7 @@ typedef struct {
     dispatch_async(dispatch_get_main_queue(), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
             
-            CGFloat duration = JTSImageViewController_TransitionAnimationDuration;
+            CGFloat duration = JTSImageViewController_TransitionOutAnimationDuration;
             if (USE_DEBUG_SLOW_ANIMATIONS == 1) {
                 duration *= 4;
             }
@@ -1111,7 +1136,7 @@ typedef struct {
     
     __weak JTSImageViewController *weakSelf = self;
     
-    CGFloat duration = JTSImageViewController_TransitionAnimationDuration;
+    CGFloat duration = JTSImageViewController_TransitionOutAnimationDuration;
     if (USE_DEBUG_SLOW_ANIMATIONS == 1) {
         duration *= 4;
     }
@@ -1154,7 +1179,7 @@ typedef struct {
     
     __weak JTSImageViewController *weakSelf = self;
     
-    CGFloat duration = JTSImageViewController_TransitionAnimationDuration;
+    CGFloat duration = JTSImageViewController_TransitionOutAnimationDuration;
     if (USE_DEBUG_SLOW_ANIMATIONS == 1) {
         duration *= 4;
     }
@@ -1199,7 +1224,7 @@ typedef struct {
     
     __weak JTSImageViewController *weakSelf = self;
     
-    CGFloat duration = JTSImageViewController_TransitionAnimationDuration;
+    CGFloat duration = JTSImageViewController_TransitionOutAnimationDuration;
     if (USE_DEBUG_SLOW_ANIMATIONS == 1) {
         duration *= 4;
     }
@@ -1958,6 +1983,13 @@ typedef struct {
     }
     
     return hint;
+}
+
+#pragma mark - ations
+
+- (void)actionClose
+{
+    [self dismiss:YES];
 }
 
 @end
