@@ -12,6 +12,14 @@
 #import "UIImage+JTSImageEffects.h"
 #import "UIApplication+JTSImageViewController.h"
 
+CG_INLINE CGFLOAT_TYPE JTSImageFloatAbs(CGFLOAT_TYPE aFloat) {
+#if CGFLOAT_IS_DOUBLE
+    return fabs(aFloat);
+#else
+    return fabsf(aFloat);
+#endif
+}
+
 ///--------------------------------------------------------------------------------------------------------------------
 /// Definitions
 ///--------------------------------------------------------------------------------------------------------------------
@@ -209,7 +217,7 @@ typedef struct {
 
 #pragma mark - UIViewController
 
-- (NSUInteger)supportedInterfaceOrientations {
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     
     /*
      iOS 8 changes the behavior of autorotation when presenting a
@@ -1625,7 +1633,7 @@ typedef struct {
     }
     
     CGPoint velocity = [scrollView.panGestureRecognizer velocityInView:scrollView.panGestureRecognizer.view];
-    if (scrollView.zoomScale == 1 && (fabsf(velocity.x) > 1600 || fabsf(velocity.y) > 1600 ) ) {
+    if (scrollView.zoomScale == 1 && (JTSImageFloatAbs(velocity.x) > 1600 || JTSImageFloatAbs(velocity.y) > 1600 ) ) {
         [self dismiss:YES];
     }
 }
